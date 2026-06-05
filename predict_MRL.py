@@ -18,7 +18,7 @@ from sklearn.metrics import r2_score
 from src.ernie_rna.tasks.ernie_rna import *
 from src.ernie_rna.models.ernie_rna import *
 from src.ernie_rna.criterions.ernie_rna import *
-from src.utils import read_fasta_file, prepare_input_for_ernierna
+from src.utils import read_fasta_file, prepare_input_for_ernierna, resolve_device
 
 
 def seq_to_rna_index(sequences):
@@ -367,21 +367,19 @@ def main(args):
                                                                     arg_overrides=arg_overrides)
     model_pre = rna_models[0]
 
-    gpu_id = args.device
-    available_device_ids = [gpu_id]
-
-    if torch.cuda.is_available() and gpu_id < torch.cuda.device_count():
-        device = torch.device(f'cuda:{gpu_id}')
-        print(f"Using GPU: {gpu_id}")
-    else:
-        device = torch.device('cpu')
-        print(f"GPU {gpu_id} not available, using CPU instead")
+    device = resolve_device(args.device)
+    print(f"Using device: {device}")
 
     my_model = choose_model(model_pre.encoder, 32, 64, 0.5, 768)
-    my_model = torch.nn.DataParallel(my_model,available_device_ids)
-    my_model.load_state_dict(torch.load(args.model_root))
+    state_dict = torch.load(args.model_root, map_location=device)
+    state_dict = {k.replace('module.', ''): v for k, v in state_dict.items()}
+    state_dict = {
+        k.replace('head.reductio_weight', 'head.reductio_module.weight').replace('head.reductio_bias', 'head.reductio_module.bias'): v
+        for k, v in state_dict.items()
+    }
+    my_model.load_state_dict(state_dict)
 
-    my_model = my_model.to(available_device_ids[0])
+    my_model = my_model.to(device)
     my_model.eval()
 
     seqs_dict = read_fasta_file(args.data_roots)
@@ -393,8 +391,8 @@ def main(args):
     for seq in seqs_lst:
         rna_index, rna_len_lst = seq_to_rna_index([seq])
         one_d, two_d = prepare_input_for_ernierna(rna_index[0],rna_len_lst[0])
-        one_d = one_d.to(available_device_ids[0])
-        two_d = two_d.to(available_device_ids[0])
+        one_d = one_d.to(device)
+        two_d = two_d.to(device)
         with torch.no_grad():
         # fine_tune result
             pred_utr_ori = my_model(one_d,two_d)
@@ -415,7 +413,7 @@ def prepare():
 
     parser.add_argument("--model_root", default='./checkpoint/ERNIE-RNA_UTR_MRL_checkpoint/ERNIE-RNA-UTR_ML_CNN_checkpoint.pt', type=str, help="The path where the model checkpoint is saved")
     parser.add_argument("--scaler_root", default='./checkpoint/ERNIE-RNA_UTR_MRL_checkpoint/scaler.save', type=str, help="The path where the scaler is saved")
-    parser.add_argument("--device", default=0, type=int, help="GPU device ID to use (default: 0)")
+    parser.add_argument("--device", default="0", type=str, help="Device id or 'cpu'")
     parser.add_argument("--output_dir", default="./results/ernie_rna_utr_mrl", type=str, help="Directory to save prediction results")
 
 
