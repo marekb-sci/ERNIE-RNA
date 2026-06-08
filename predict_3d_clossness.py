@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import colors as mpl_colors # Renamed to avoid conflict
 
-from src.utils import load_pretrained_ernierna, prepare_input_for_ernierna, resolve_device # Assuming creatmat is in prepare_input
+from src.utils import load_pretrained_ernierna, prepare_input_for_ernierna # Assuming creatmat is in prepare_input
 from src.downstream_heads.closeness_model import ClosenessModelAttnMapDense16 # Adjusted import
 
 def rna_string_to_numerical_array(sequence_str):
@@ -93,8 +93,6 @@ def load_sequences_from_file(file_path):
 
 
 def main(args):
-    args.device = resolve_device(args.device)
-
     # Load ERNIE-RNA core model
     ernie_rna_core_model = load_pretrained_ernierna(
         args.ernie_rna_checkpoint_path,
@@ -202,7 +200,7 @@ if __name__ == "__main__":
     parser.add_argument("--ernie_rna_dict_path", type=str, default='./src/dict/', help="Path to the ERNIE-RNA dictionary directory.")
     parser.add_argument("--finetuned_model_path", type=str, default='./checkpoint/ERNIE-RNA_3d_clossness_checkpoint/ERNIE-RNA_3D_closeness_attnmap_dp16_finetuned.pt', help="Path to the fine-tuned 3D Closeness downstream model weights (.pt).")
     
-    parser.add_argument("--device", type=str, default="0" if torch.cuda.is_available() else "cpu", help="Device to use for computation (e.g., '0', 'cuda:0', 'cpu').")
+    parser.add_argument("--device", type=str, default="cpu", help="Device to use for computation (e.g., 'cpu' or 'cuda:0').")
     
     parser.add_argument("--visualize", action='store_true', help="Generate and save plots of the predicted closeness maps.")
     parser.add_argument("--plot_dir", type=str, default="./results/ernie_rna_3d_clossness/closeness_plots/", help="Directory to save visualizations if --visualize is set.")

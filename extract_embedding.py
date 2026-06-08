@@ -7,7 +7,7 @@ import numpy as np
 from src.ernie_rna.tasks.ernie_rna import *
 from src.ernie_rna.models.ernie_rna import *
 from src.ernie_rna.criterions.ernie_rna import *
-from src.utils import ErnieRNAOnestage, read_text_file, load_pretrained_ernierna, prepare_input_for_ernierna, resolve_device
+from src.utils import ErnieRNAOnestage, read_text_file, load_pretrained_ernierna, prepare_input_for_ernierna
 
 
 def seq_to_index(sequences):
@@ -142,7 +142,7 @@ if __name__ == "__main__":
     parser.add_argument("--layer_idx_emb", default=12, type=int, help="The layer idx of which we extract embedding from, 12 for all layers")
     parser.add_argument("--layer_idx_attn", default=13, type=int, help="The layer idx of which we extract attnmap from, 13 for all layers")
     parser.add_argument("--head_idx_attn", default=12, type=int, help="The head idx of which we extract attnmap from, 12 for all heads")
-    parser.add_argument("--device", default="0", type=str, help="Device id or 'cpu'")
+    parser.add_argument("--device", default='cpu', type=str, help="The device used by the model, for example 'cpu' or 'cuda:0'")
 
     args = parser.parse_args()
     os.makedirs(args.save_path, exist_ok=True)
@@ -158,17 +158,15 @@ if __name__ == "__main__":
         assert 0 <= args.head_idx_attn <= 12
     except:
         raise(NotImplementedError)
-    device = resolve_device(args.device)
-
-    cls_embedding = extract_embedding_of_ernierna(seqs_lst, if_cls=True, arg_overrides=args.arg_overrides, pretrained_model_path=args.ernie_rna_pretrained_checkpoint, device=device, layer_idx = args.layer_idx_emb)
+    cls_embedding = extract_embedding_of_ernierna(seqs_lst, if_cls=True, arg_overrides=args.arg_overrides, pretrained_model_path=args.ernie_rna_pretrained_checkpoint, device=args.device, layer_idx = args.layer_idx_emb)
     # print(cls_embedding.shape) # cls_embedding shape like [Batch, 768]
     np.save(args.save_path + 'cls_embedding.npy',cls_embedding)
     
-    all_embedding = extract_embedding_of_ernierna(seqs_lst, if_cls=False, arg_overrides=args.arg_overrides, pretrained_model_path=args.ernie_rna_pretrained_checkpoint, device=device, layer_idx = args.layer_idx_emb)
+    all_embedding = extract_embedding_of_ernierna(seqs_lst, if_cls=False, arg_overrides=args.arg_overrides, pretrained_model_path=args.ernie_rna_pretrained_checkpoint, device=args.device, layer_idx = args.layer_idx_emb)
     # print(all_embedding.shape) # all_embedding shape like [Batch, Length + 2, 768]
     np.save(args.save_path + 'all_embedding.npy',all_embedding)
     
-    attnmap = extract_attnmap_of_ernierna(seqs_lst, attn_len=None, arg_overrides=args.arg_overrides, pretrained_model_path=args.ernie_rna_pretrained_checkpoint, device=device, layer_idx = args.layer_idx_attn, head_idx = args.head_idx_attn)
+    attnmap = extract_attnmap_of_ernierna(seqs_lst, attn_len=None, arg_overrides=args.arg_overrides, pretrained_model_path=args.ernie_rna_pretrained_checkpoint, device=args.device, layer_idx = args.layer_idx_attn, head_idx = args.head_idx_attn)
     # print(attnmap.shape) # attnmap shape like [Batch, Length + 2, Length + 2]
     np.save(args.save_path + 'attnmap.npy',attnmap)
     print(f'Done in {time.time()-start}s!')

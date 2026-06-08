@@ -11,7 +11,8 @@ You can find more details about **ERNIE-RNA** in our paper, [ERNIE-RNA: An RNA L
 <details><summary>Table of contents</summary>
 
 - [ERNIE-RNA](#ernie-rna)
-  - [Create Environment with Conda ](#create-environment-with-conda-)
+  - [Create Environment](#create-environment)
+  - [Download pre-trained models](#download-pre-trained-models)
   - [Access pre-trained models. ](#access-pre-trained-models-)
   - [Apply ERNIE-RNA with Existing Scripts. ](#apply-ernie-rna-with-existing-scripts-)
     - [1. Embedding Extraction. ](#1-embedding-extraction-)
@@ -22,71 +23,55 @@ You can find more details about **ERNIE-RNA** in our paper, [ERNIE-RNA: An RNA L
 
 </details>
 
-## Create Environment with Conda 
+## Create Environment
 
-### Linux Environment
+This repository is set up for CPU-only inference with `requirements-cpu.txt`.
 
-First, download the repository and create the environment.
+### Option 1: `uv`
 
-```
+```bash
 git clone https://github.com/Bruce-ywj/ERNIE-RNA.git
 cd ./ERNIE-RNA
-conda env create -f environment.yml
+uv venv --python 3.9 .venv
+uv pip install --python .venv/bin/python -r requirements-cpu.txt
 ```
 
-Then, activate the "ERNIE-RNA" environment.
+### Option 2: `venv` + `pip`
 
-```
-conda activate ERNIE-RNA
-```
-
-### Windows Environment
-
-Since the fairseq library depends on C++ code, you need to install Microsoft C++ Build Tools first:
-
-https://visualstudio.microsoft.com/visual-cpp-build-tools/
-
-Open the installer and check "Desktop development with C++" on the left panel.
-
-Then run:
-
-```
-conda env create -f environment_CPU_windows.yml
+```bash
+git clone https://github.com/Bruce-ywj/ERNIE-RNA.git
+cd ./ERNIE-RNA
+python3.9 -m venv .venv
+. .venv/bin/activate
+pip install -r requirements-cpu.txt
 ```
 
-### MacOS Environment
+## Download pre-trained models
 
-Run:
+Download all checkpoints into the expected repository directories:
 
+```bash
+.venv/bin/python src/download_checkpoints.py
 ```
-conda env create -f environment_CPU_mac.yml
-```
 
-At this step, the torch version is not explicitly specified.
-
-Since the default parameters of the load function have changed in newer versions, you can either downgrade to version 1.10.0 after the environment is installed, or add the following patch after import torch:
-
-```
-import torch as _torch
-__orig_load = _torch.load
-
-def _patched_load(*args, **kwargs):
-    kwargs.setdefault("weights_only", False)  # Restore the default behavior before version 2.5
-    return __orig_load(*args, **kwargs)
-
-_torch.load = _patched_load
-```
+Use `--force` to redownload existing files.
 
 ## Access pre-trained models. 
 
-There are two subfolders in the model folder, each folder has a link, and you can download the model in the link to the same directory. Or you can download both models from our [drive](https://drive.google.com/drive/folders/10Yz-sdezhmazzVtrtdBGdzzqK1Z6f-Xv)
+There are two subfolders in the model folder, each folder has a link, and you can download the model in the link to the same directory. Or you can download both models from our [drive](https://drive.google.com/drive/folders/10Yz-sdezhmazzVtrtdBGdzzqK1Z6f-Xv).
+
+For a scripted download, use:
+
+```bash
+.venv/bin/python src/download_checkpoints.py
+```
 
 ## Apply ERNIE-RNA with Existing Scripts. 
 
 ### 1. Embedding Extraction. 
 
-```
-python extract_embedding.py --seqs_path='./data/test_seqs.txt' --device='cuda:0'
+``` 
+.venv/bin/python extract_embedding.py --seqs_path='./data/test_seqs.txt' --device='cpu'
 ```
 
 The model path parameters are set by default and do not need to be changed.
@@ -104,7 +89,7 @@ ERNIE-RNA provides powerful RNA secondary structure prediction capabilities, sup
 #### Basic Usage:
 
 ```bash
-python predict_ss_rna.py --dataset_name bpRNA-1m --seqs_path={fasta_dir} --save_path={output_dir} --device=0
+.venv/bin/python predict_ss_rna.py --dataset_name bpRNA-1m --seqs_path={fasta_dir} --save_path={output_dir} --device=-1
 ```
 
 #### Parameters:
@@ -146,19 +131,19 @@ For each input sequence, ERNIE-RNA generates two structure files in CT format:
 1. Prediction using bpRNA-1m training set parameters:
 
 ```bash
-python predict_ss_rna.py --dataset_name bpRNA-1m --device 0 --seqs_path ./data/ss_prediction/bpRNA-1m_testseqs.fasta --save_path ./results/ernie_rna_ss_prediction/bpRNA-1m_test_results/
+.venv/bin/python predict_ss_rna.py --dataset_name bpRNA-1m --device -1 --seqs_path ./data/ss_prediction/bpRNA-1m_testseqs.fasta --save_path ./results/ernie_rna_ss_prediction/bpRNA-1m_test_results/
 ```
 
 2. Prediction using RNA3DB training set parameters:
 
 ```bash
-python predict_ss_rna.py --dataset_name RNA3DB --device 0 --seqs_path ./data/ss_prediction/rna3db_testseqs.fasta --save_path ./results/ernie_rna_ss_prediction/rna3db_test_results/
+.venv/bin/python predict_ss_rna.py --dataset_name RNA3DB --device -1 --seqs_path ./data/ss_prediction/rna3db_testseqs.fasta --save_path ./results/ernie_rna_ss_prediction/rna3db_test_results/
 ```
 
 3. Prediction using bpRNA-1m training set but performed best in bpRNA-new test parameters:
 
 ```bash
-python predict_ss_rna.py --dataset_name bpRNA-new --device 0 --seqs_path ./data/ss_prediction/bpRNA-new_testseqs.fasta --save_path ./results/ernie_rna_ss_prediction/bpRNA-new_test_results/
+.venv/bin/python predict_ss_rna.py --dataset_name bpRNA-new --device -1 --seqs_path ./data/ss_prediction/bpRNA-new_testseqs.fasta --save_path ./results/ernie_rna_ss_prediction/bpRNA-new_test_results/
 ```
 
 ### 3. 3D Closeness Prediction 
@@ -170,9 +155,9 @@ This section describes how to use ERNIE-RNA to predict RNA 3D closeness maps. Th
 To predict 3D closeness for RNA sequences in a FASTA file and visualize the results:
 
 ```bash
-python predict_3d_clossness.py \
+.venv/bin/python predict_3d_clossness.py \
     --input_rna_file ./results/ernie_rna_3d_clossness/example.fasta \
-    --device cuda:0 \
+  --device cpu \
     --visualize
 ```
 
@@ -183,9 +168,9 @@ This section describes how to use ERNIE-RNA to predict mean ribosome loading (MR
 ### Basic Usage
 
 ```bash
-python predict_MRL.py \
+.venv/bin/python predict_MRL.py \
     --data_roots ./data/MRL_data/seqs.fasta \
-    --device 0
+  --device -1
 ```
 
 ### Parameters

@@ -7,7 +7,7 @@ import numpy as np
 from src.ernie_rna.tasks.ernie_rna import *
 from src.ernie_rna.models.ernie_rna import *
 from src.ernie_rna.criterions.ernie_rna import *
-from src.utils import load_pretrained_ernierna, prepare_input_for_ernierna, ChooseModel, read_fasta_file, save_rnass_results, resolve_device
+from src.utils import load_pretrained_ernierna, prepare_input_for_ernierna, ChooseModel, read_fasta_file, save_rnass_results
 
 
 class ErnieRNA(nn.Module):
@@ -230,15 +230,16 @@ def predict(rna_lst, seq_names, best_model_path=None, mlm_pretrained_model_path=
         os.makedirs(ct_dir)
 
     # load model
+    map_location = 'cpu' if device == 'cpu' else f'cuda:{device}'
     model_pre = load_pretrained_ernierna(mlm_pretrained_model_path, arg_overrides)
     my_model = ChooseModel(model_pre.encoder)
-    state_dict = torch.load(best_model_path, map_location=device)
+    state_dict = torch.load(best_model_path, map_location=map_location)
     new_state_dict = {k.replace('module.', ''): v for k, v in state_dict.items()}
     my_model.load_state_dict(new_state_dict)
-    my_model = my_model.to(device)
+    my_model = my_model.to(map_location)
     my_model.eval()
     
-    pretrain_model = ErnieRNA(model_pre.encoder).to(device)
+    pretrain_model = ErnieRNA(model_pre.encoder).to(map_location)
     pretrain_model.eval()
     
     print('Model Loading Done!!!')
@@ -250,9 +251,9 @@ def predict(rna_lst, seq_names, best_model_path=None, mlm_pretrained_model_path=
             X, data_seq = seq_to_rnaindex_and_onehot(seq)
             one_d, twod_data = prepare_input_for_ernierna(X, len(seq))
             
-            oned = one_d.to(device)
-            twod_data = twod_data.to(device)
-            data_seq = data_seq.to(device)
+            oned = one_d.to(map_location)
+            twod_data = twod_data.to(map_location)
+            data_seq = data_seq.to(map_location)
             
             # 微调模型预测
             pred_ss = my_model(oned, twod_data)
@@ -284,7 +285,7 @@ if __name__ == '__main__':
     parser.add_argument("--ernie_rna_pretrained_checkpoint", default='./checkpoint/ERNIE-RNA_checkpoint/ERNIE-RNA_pretrain.pt', type=str, help="The path of pre-trained ERNIE-RNA checkpoint")
     parser.add_argument("--dataset_name", default=None, type=str, help="Dataset name (bpRNA-1m, RNAStralign, RIVAS, RNA3DB, bpRNA-new, bpRNA-1m_RNAstralign). If specified, ss_rna_checkpoint will be auto-set.")
     parser.add_argument("--ss_rna_checkpoint", default=None, type=str, help="The path of fine-tuned ERNEI-RNA checkpoint")
-    parser.add_argument("--device", default="0", type=str, help="Device id or 'cpu'")
+    parser.add_argument("--device", default=-1, type=int, help="GPU device ID (0, 1, 2...) or CPU (-1)")
 
 
     args = parser.parse_args()
@@ -315,7 +316,7 @@ if __name__ == '__main__':
     seq_names = list(seqs_dict.keys())
     
     # 预测RNA二级结构并生成CT文件
-    device = resolve_device(args.device)
+    device = 'cpu' if args.device < 0 else args.device
     ct_files = predict(seqs_lst, seq_names, args.ss_rna_checkpoint, args.ernie_rna_pretrained_checkpoint, args.arg_overrides, device, args.save_path)
     
     print(f"Generated {len(ct_files)} CT files in {args.save_path}")

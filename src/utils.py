@@ -2,54 +2,12 @@ import os
 import math
 import torch
 import numpy as np
-import warnings
 import torch.nn as nn
 import torch.nn.functional as F
 from collections import OrderedDict
 from .ernie_rna.tasks.ernie_rna import *
 from .ernie_rna.models.ernie_rna import *
 from .ernie_rna.criterions.ernie_rna import *
-
-
-def resolve_device(device):
-    if isinstance(device, torch.device):
-        return device
-
-    if isinstance(device, str):
-        normalized = device.strip().lower()
-        if normalized == 'cpu':
-            return torch.device('cpu')
-        if normalized.startswith('cuda'):
-            requested = torch.device(normalized)
-            device_index = 0 if requested.index is None else requested.index
-        else:
-            try:
-                device_index = int(normalized)
-            except ValueError as exc:
-                raise ValueError(f"Unsupported device value: {device}") from exc
-    elif isinstance(device, int):
-        device_index = device
-    else:
-        raise ValueError(f"Unsupported device value: {device}")
-
-    if device_index < 0 or not torch.cuda.is_available():
-        return torch.device('cpu')
-
-    if device_index >= torch.cuda.device_count():
-        warnings.warn(f"CUDA device {device_index} is unavailable, falling back to CPU.")
-        return torch.device('cpu')
-
-    arch_list = set(torch.cuda.get_arch_list()) if hasattr(torch.cuda, 'get_arch_list') else set()
-    if arch_list:
-        capability = torch.cuda.get_device_capability(device_index)
-        capability_tag = f"sm_{capability[0]}{capability[1]}"
-        if capability_tag not in arch_list:
-            warnings.warn(
-                f"CUDA device {device_index} ({capability_tag}) is unsupported by this PyTorch build, falling back to CPU."
-            )
-            return torch.device('cpu')
-
-    return torch.device(f'cuda:{device_index}')
 
 
 def prepare_input_for_ernierna(index, seq_len):

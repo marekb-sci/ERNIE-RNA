@@ -18,7 +18,7 @@ from sklearn.metrics import r2_score
 from src.ernie_rna.tasks.ernie_rna import *
 from src.ernie_rna.models.ernie_rna import *
 from src.ernie_rna.criterions.ernie_rna import *
-from src.utils import read_fasta_file, prepare_input_for_ernierna, resolve_device
+from src.utils import read_fasta_file, prepare_input_for_ernierna
 
 
 def seq_to_rna_index(sequences):
@@ -367,7 +367,7 @@ def main(args):
                                                                     arg_overrides=arg_overrides)
     model_pre = rna_models[0]
 
-    device = resolve_device(args.device)
+    device = 'cpu' if args.device < 0 else f'cuda:{args.device}'
     print(f"Using device: {device}")
 
     my_model = choose_model(model_pre.encoder, 32, 64, 0.5, 768)
@@ -413,7 +413,7 @@ def prepare():
 
     parser.add_argument("--model_root", default='./checkpoint/ERNIE-RNA_UTR_MRL_checkpoint/ERNIE-RNA-UTR_ML_CNN_checkpoint.pt', type=str, help="The path where the model checkpoint is saved")
     parser.add_argument("--scaler_root", default='./checkpoint/ERNIE-RNA_UTR_MRL_checkpoint/scaler.save', type=str, help="The path where the scaler is saved")
-    parser.add_argument("--device", default="0", type=str, help="Device id or 'cpu'")
+    parser.add_argument("--device", default=-1, type=int, help="GPU device ID to use (default: 0, use -1 for CPU)")
     parser.add_argument("--output_dir", default="./results/ernie_rna_utr_mrl", type=str, help="Directory to save prediction results")
 
 
