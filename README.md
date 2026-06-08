@@ -1,3 +1,11 @@
+**Fork note**: this fork implements the following changes:
+- CPU installation with pip instead of conda
+- script to download checkpoints
+- notebook with attention visualization
+- squence classification example
+
+---
+
 # ERNIE-RNA
 
 This repository contains codes and pre-trained models for **RNA feature extraction and secondary structure prediction model (ERNIE-RNA)**.
@@ -181,6 +189,18 @@ This section describes how to use ERNIE-RNA to predict mean ribosome loading (MR
 - `--scaler_root`: Path to scaler file for normalization (default: `./checkpoint/ERNIE-RNA_UTR_MRL_checkpoint/scaler.save`)
 - `--output_dir`: Directory to save prediction results (default: `./results/ernie_rna_utr_mrl`)
 - `--device`: GPU device ID to use (default: 0, use -1 for CPU)
+
+## 5. Sequence classification
+
+1. Download dataset:
+
+```
+python download_classification_dataset.py
+```
+
+2. Extract embeddings and run classification with `knn_classification.ipynb`
+
+
 
 ## Citations 
 

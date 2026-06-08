@@ -6,4 +6,4 @@ __pycache__/
 *.pt
 
 results/
-!results/ernie_rna_representations/test_seqs/
+data/
