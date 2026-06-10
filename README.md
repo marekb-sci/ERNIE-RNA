@@ -38,28 +38,33 @@ This repository is set up for CPU-only inference with `requirements-cpu.txt`.
 ### Option 1: `uv`
 
 ```bash
-git clone https://github.com/Bruce-ywj/ERNIE-RNA.git
+git clone https://github.com/marekb-sci/ERNIE-RNA.git
 cd ./ERNIE-RNA
 uv venv --python 3.9 .venv
-uv pip install --python .venv/bin/python -r requirements-cpu.txt
+uv pip install pip==23.0.1
+uv pip install --python python -r requirements-cpu.txt
 ```
 
-### Option 2: `venv` + `pip`
+Next, use `uv run python scipt.py` instead of `python script.py`
+
+### Option 2: `venv + pip`
 
 ```bash
-git clone https://github.com/Bruce-ywj/ERNIE-RNA.git
+git clone https://github.com/marekb-sci/ERNIE-RNA.git
 cd ./ERNIE-RNA
 python3.9 -m venv .venv
-. .venv/bin/activate
+source .venv/bin/activate
+pip install pip==23.0.1
 pip install -r requirements-cpu.txt
 ```
+
 
 ## Download pre-trained models
 
 Download all checkpoints into the expected repository directories:
 
 ```bash
-.venv/bin/python src/download_checkpoints.py
+python src/download_checkpoints.py
 ```
 
 Use `--force` to redownload existing files.
@@ -71,7 +76,7 @@ There are two subfolders in the model folder, each folder has a link, and you ca
 For a scripted download, use:
 
 ```bash
-.venv/bin/python src/download_checkpoints.py
+python src/download_checkpoints.py
 ```
 
 ## Apply ERNIE-RNA with Existing Scripts. 
@@ -79,7 +84,7 @@ For a scripted download, use:
 ### 1. Embedding Extraction. 
 
 ``` 
-.venv/bin/python extract_embedding.py --seqs_path='./data/test_seqs.txt' --device='cpu'
+python extract_embedding.py --seqs_path='./data/test_seqs.txt' --device='cpu'
 ```
 
 The model path parameters are set by default and do not need to be changed.
@@ -97,7 +102,7 @@ ERNIE-RNA provides powerful RNA secondary structure prediction capabilities, sup
 #### Basic Usage:
 
 ```bash
-.venv/bin/python predict_ss_rna.py --dataset_name bpRNA-1m --seqs_path={fasta_dir} --save_path={output_dir} --device=-1
+python predict_ss_rna.py --dataset_name bpRNA-1m --seqs_path={fasta_dir} --save_path={output_dir} --device=-1
 ```
 
 #### Parameters:
@@ -139,19 +144,19 @@ For each input sequence, ERNIE-RNA generates two structure files in CT format:
 1. Prediction using bpRNA-1m training set parameters:
 
 ```bash
-.venv/bin/python predict_ss_rna.py --dataset_name bpRNA-1m --device -1 --seqs_path ./data/ss_prediction/bpRNA-1m_testseqs.fasta --save_path ./results/ernie_rna_ss_prediction/bpRNA-1m_test_results/
+python predict_ss_rna.py --dataset_name bpRNA-1m --device -1 --seqs_path ./data/ss_prediction/bpRNA-1m_testseqs.fasta --save_path ./results/ernie_rna_ss_prediction/bpRNA-1m_test_results/
 ```
 
 2. Prediction using RNA3DB training set parameters:
 
 ```bash
-.venv/bin/python predict_ss_rna.py --dataset_name RNA3DB --device -1 --seqs_path ./data/ss_prediction/rna3db_testseqs.fasta --save_path ./results/ernie_rna_ss_prediction/rna3db_test_results/
+python predict_ss_rna.py --dataset_name RNA3DB --device -1 --seqs_path ./data/ss_prediction/rna3db_testseqs.fasta --save_path ./results/ernie_rna_ss_prediction/rna3db_test_results/
 ```
 
 3. Prediction using bpRNA-1m training set but performed best in bpRNA-new test parameters:
 
 ```bash
-.venv/bin/python predict_ss_rna.py --dataset_name bpRNA-new --device -1 --seqs_path ./data/ss_prediction/bpRNA-new_testseqs.fasta --save_path ./results/ernie_rna_ss_prediction/bpRNA-new_test_results/
+python predict_ss_rna.py --dataset_name bpRNA-new --device -1 --seqs_path ./data/ss_prediction/bpRNA-new_testseqs.fasta --save_path ./results/ernie_rna_ss_prediction/bpRNA-new_test_results/
 ```
 
 ### 3. 3D Closeness Prediction 
@@ -163,7 +168,7 @@ This section describes how to use ERNIE-RNA to predict RNA 3D closeness maps. Th
 To predict 3D closeness for RNA sequences in a FASTA file and visualize the results:
 
 ```bash
-.venv/bin/python predict_3d_clossness.py \
+python predict_3d_clossness.py \
     --input_rna_file ./results/ernie_rna_3d_clossness/example.fasta \
   --device cpu \
     --visualize
@@ -176,7 +181,7 @@ This section describes how to use ERNIE-RNA to predict mean ribosome loading (MR
 ### Basic Usage
 
 ```bash
-.venv/bin/python predict_MRL.py \
+python predict_MRL.py \
     --data_roots ./data/MRL_data/seqs.fasta \
   --device -1
 ```
